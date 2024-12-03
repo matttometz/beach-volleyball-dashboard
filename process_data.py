@@ -45,13 +45,13 @@ def calculate_training_recommendation(athlete_data, recent_data):
     
     acwr = recent_data['ACWR']
     if pd.isna(acwr):
-        base_rec = "same"
+        base_rec = "Same"
     elif acwr < 1.0:
-        base_rec = "more"
+        base_rec = "More"
     elif acwr > 1.3:
-        base_rec = "less"
+        base_rec = "Less"
     else:
-        base_rec = "same"
+        base_rec = "Same"
     
     acute_load_ratio = recent_data['Acute Training Load'] / athlete_means['Acute Training Load']
     hr_min_ratio = recent_data['HR Min (+80%)'] / athlete_means['HR Min (+80%)']
@@ -64,11 +64,11 @@ def calculate_training_recommendation(athlete_data, recent_data):
     )
     
     final_rec = base_rec
-    if base_rec == "same":
+    if base_rec == "Same":
         if adjustment_score < 0.8:
-            final_rec = "more"
+            final_rec = "More"
         elif adjustment_score > 1.2:
-            final_rec = "less"
+            final_rec = "Less"
             
     return final_rec, {
         'base_rec': base_rec,
