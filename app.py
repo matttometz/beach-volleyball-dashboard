@@ -26,6 +26,46 @@ def check_password():
     
     return True
 
+def color_recommendations(val):
+    """Style recommendations with black background and white text"""
+    colors = {
+        'more': 'background-color: #1e1e1e; color: white',  # Dark background for 'more'
+        'same': 'background-color: #2d2d2d; color: white',  # Slightly lighter dark for 'same'
+        'less': 'background-color: #3d3d3d; color: white'   # Even lighter dark for 'less'
+    }
+    return colors.get(val, '')
+
+def sort_athletes(df):
+    """Sort athletes by Top Player status and then alphabetically"""
+    # Define Top Players
+    top_players = [
+        "Daniela Alvarez",
+        "Stacy Reeves",
+        "Hailey Hamlett",
+        "Emma Glagau",
+        "Maria Gonzalez",
+        "Kaitlyn Bradley",
+        "Ana Vergara",
+        "Deni Konstantinova",
+        "Tania Moreno",
+        "Anete Namike",
+        "Olivia Cliens",
+        "Anhelina Khmil",
+        "Allanis Navas",
+        "Sofia Izuzquiza"
+    ]
+    
+    # Create a new column for sorting
+    df['sort_key'] = df['Athlete'].apply(lambda x: (0 if x in top_players else 1, x))
+    
+    # Sort by the tuple (top_player_status, name)
+    df = df.sort_values('sort_key')
+    
+    # Drop the sorting column
+    df = df.drop('sort_key', axis=1)
+    
+    return df
+
 st.set_page_config(page_title="Beach Volleyball Load Management", layout="wide")
 
 if not check_password():
@@ -35,7 +75,7 @@ st.title("Beach Volleyball Load Management Dashboard")
 
 try:
     # Read data from the data directory
-    data_path = "data"  # or the full path to your data directory
+    data_path = "data"
     data_files = [f for f in os.listdir(data_path) if f.endswith('.xlsx')]
     
     if not data_files:
@@ -95,18 +135,20 @@ try:
     
     with col1:
         st.subheader("Current Recommendations")
-        def color_recommendations(val):
-            colors = {
-                'more': 'background-color: lightgreen',
-                'same': 'background-color: lightgray',
-                'less': 'background-color: lightcoral'
-            }
-            return colors.get(val, '')
         
+        # Sort the recommendations
+        recommendations = sort_athletes(recommendations)
+        
+        # Apply styling
         styled_recommendations = recommendations.style.applymap(
             color_recommendations, 
             subset=['Recommendation']
-        )
+        ).set_properties(**{
+            'background-color': '#1e1e1e',
+            'color': 'white',
+            'border': '1px solid #2d2d2d'
+        })
+        
         st.dataframe(styled_recommendations)
     
     with col2:
@@ -118,6 +160,11 @@ try:
                        title='ACWR by Athlete')
         fig.add_vline(x=1.0, line_dash="dash", line_color="green")
         fig.add_vline(x=1.3, line_dash="dash", line_color="red")
+        fig.update_layout(
+            plot_bgcolor='#1e1e1e',
+            paper_bgcolor='#1e1e1e',
+            font_color='white'
+        )
         st.plotly_chart(fig)
     
     # Individual athlete analysis
