@@ -3,32 +3,24 @@ import pandas as pd
 import plotly.express as px
 from process_data import clean_dataframe, calculate_training_recommendation
 import os
-import tempfile
 
 # Password protection
 def check_password():
     """Returns `True` if the user had the correct password."""
-
     def password_entered():
         """Checks whether a password entered by the user is correct."""
         if st.session_state["password"] == st.secrets["password"]:
             st.session_state["password_correct"] = True
-            del st.session_state["password"]  # Don't store the password.
+            del st.session_state["password"]
         else:
             st.session_state["password_correct"] = False
 
-    # First run or password incorrect
     if "password_correct" not in st.session_state:
-        st.text_input(
-            "Password", type="password", on_change=password_entered, key="password"
-        )
+        st.text_input("Password", type="password", on_change=password_entered, key="password")
         return False
     
-    # Password correct
     elif not st.session_state["password_correct"]:
-        st.text_input(
-            "Password", type="password", on_change=password_entered, key="password"
-        )
+        st.text_input("Password", type="password", on_change=password_entered, key="password")
         st.error("😕 Password incorrect")
         return False
     
@@ -36,14 +28,11 @@ def check_password():
 
 st.set_page_config(page_title="Beach Volleyball Load Management", layout="wide")
 
-# Add password check
 if not check_password():
     st.stop()
 
-# Title and description
 st.title("Beach Volleyball Load Management Dashboard")
 
-# File uploader
 uploaded_files = st.file_uploader("Upload FirstBeat Excel files", type=['xlsx'], accept_multiple_files=True)
 
 if uploaded_files:
@@ -51,59 +40,91 @@ if uploaded_files:
         # Process all uploaded files
         dfs = []
         for uploaded_file in uploaded_files:
-            df = pd.read_excel(uploaded_file)
-            dfs.append(df)
+            try:
+                df = pd.read_excel(uploaded_file)
+                st.write(f"Columns in {uploaded_file.name}:", df.columns.tolist())  # Debug info
+                dfs.append(df)
+            except Exception as e:
+                st.error(f"Error reading {uploaded_file.name}: {str(e)}")
+                continue
         
+        if not dfs:
+            st.error("No valid files were processed")
+            st.stop()
+            
         # Combine all data
         combined_df = pd.concat(dfs, ignore_index=True)
+        st.write("Combined DataFrame columns:", combined_df.columns.tolist())  # Debug info
         
-        # Group by athlete and date to handle multiple entries
-        grouped_cols = {
-            # Columns to sum
-            'TRIMP (Index)': 'sum',
-            'Movement load': 'sum',
-            'Anaerobic threshold zone (hh:mm:ss)': 'sum',
-            'High intensity training (hh:mm:ss)': 'sum',
-            # Columns to take last value (daily summary metrics)
-            'Acute Training Load': 'last',
-            'Chronic Training Load': 'last',
-            'ACWR': 'last',
-            'Training Status': 'last'
-        }
-        
-        combined_df = combined_df.groupby(['Athlete name', 'Start date (dd.mm.yyyy)']).agg(grouped_cols).reset_index()
-        
-        # Clean the combined data
-        combined_df = clean_dataframe(combined_df)
-        
+        # Group by athlete and date
+        try:
+            grouped_cols = {
+                'TRIMP (Index)': 'sum',
+                'Movement load': 'sum',
+                'Anaerobic threshold zone (hh:mm:ss)': 'sum',
+                'High intensity training (hh:mm:ss)': 'sum',
+                'Acute Training Load': 'last',
+                'Chronic Training Load': 'last',
+                'ACWR': 'last',
+                'Training Status': 'last'
+            }
+            
+            # Check if all required columns exist
+            missing_cols = [col for col in grouped_cols.keys() if col not in combined_df.columns]
+            if missing_cols:
+                st.error(f"Missing columns in data: {missing_cols}")
+                st.stop()
+                
+            combined_df = combined_df.groupby(['Athlete name', 'Start date (dd.mm.yyyy)']).agg(grouped_cols).reset_index()
+            st.write("After grouping columns:", combined_df.columns.tolist())  # Debug info
+            
+            # Clean the combined data
+            combined_df = clean_dataframe(combined_df)
+            st.write("After cleaning columns:", combined_df.columns.tolist())  # Debug info
+
+        except Exception as e:
+            st.error(f"Error in data grouping/cleaning: {str(e)}")
+            st.stop()
+            
         # Calculate recommendations
-        results = []
-        for athlete in combined_df['Athlete name'].unique():
-            athlete_data = combined_df[combined_df['Athlete name'] == athlete]
-            recent_data = athlete_data[athlete_data['Start date (dd.mm.yyyy)'] == 
-                                     athlete_data['Start date (dd.mm.yyyy)'].max()].iloc[0]
+        try:
+            results = []
+            for athlete in combined_df['Athlete name'].unique():
+                athlete_data = combined_df[combined_df['Athlete name'] == athlete]
+                if len(athlete_data) == 0:
+                    continue
+                    
+                recent_data = athlete_data[athlete_data['Start date (dd.mm.yyyy)'] == 
+                                       athlete_data['Start date (dd.mm.yyyy)'].max()].iloc[0]
+                
+                rec, details = calculate_training_recommendation(athlete_data, recent_data)
+                
+                results.append({
+                    'Athlete': athlete,
+                    'Recommendation': rec,
+                    'ACWR': details['acwr'],
+                    'Acute_Load_Ratio': details['acute_ratio'],
+                    'HR_Min_Ratio': details['hr_ratio'],
+                    'Movement_Ratio': details['movement_ratio'],
+                    'Last Training': recent_data['Start date (dd.mm.yyyy)'],
+                    'Adjustment_Score': details['adjustment_score']
+                })
+                
+            if not results:
+                st.error("No valid results generated")
+                st.stop()
+                
+            recommendations = pd.DataFrame(results)
             
-            rec, details = calculate_training_recommendation(athlete_data, recent_data)
-            
-            results.append({
-                'Athlete': athlete,
-                'Recommendation': rec,
-                'ACWR': details['acwr'],
-                'Acute_Load_Ratio': details['acute_ratio'],
-                'HR_Min_Ratio': details['hr_ratio'],
-                'Movement_Ratio': details['movement_ratio'],
-                'Last Training': recent_data['Start date (dd.mm.yyyy)'],
-                'Adjustment_Score': details['adjustment_score']
-            })
-        
-        recommendations = pd.DataFrame(results)
-        
+        except Exception as e:
+            st.error(f"Error in recommendations calculation: {str(e)}")
+            st.stop()
+
         # Display recommendations
         col1, col2 = st.columns(2)
         
         with col1:
             st.subheader("Current Recommendations")
-            # Color-code recommendations
             def color_recommendations(val):
                 colors = {
                     'more': 'background-color: lightgreen',
@@ -121,10 +142,10 @@ if uploaded_files:
         with col2:
             st.subheader("ACWR Distribution")
             fig = px.scatter(recommendations, 
-                            x='ACWR', 
-                            y='Athlete',
-                            color='Recommendation',
-                            title='ACWR by Athlete')
+                           x='ACWR', 
+                           y='Athlete',
+                           color='Recommendation',
+                           title='ACWR by Athlete')
             fig.add_vline(x=1.0, line_dash="dash", line_color="green")
             fig.add_vline(x=1.3, line_dash="dash", line_color="red")
             st.plotly_chart(fig)
@@ -153,5 +174,9 @@ if uploaded_files:
 
     except Exception as e:
         st.error(f"Error processing data: {str(e)}")
+        st.write("If you're seeing this error, please check that your Excel files have all required columns:")
+        st.write(["Athlete name", "Start date (dd.mm.yyyy)", "TRIMP (Index)", "Movement load", 
+                 "Anaerobic threshold zone (hh:mm:ss)", "High intensity training (hh:mm:ss)",
+                 "Acute Training Load", "Chronic Training Load", "ACWR", "Training Status"])
 else:
     st.info("Please upload FirstBeat Excel files to view the dashboard")
