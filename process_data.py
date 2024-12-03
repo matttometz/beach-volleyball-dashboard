@@ -1,48 +1,5 @@
 import pandas as pd
 import numpy as np
-import os
-from datetime import datetime
-
-def parse_filename_date(filename):
-    """Extract dates from filenames like '2024-12-01_to_2024-12-07.xlsx' or '2024-12-01.xlsx'"""
-    filename = filename.replace('.xlsx', '')
-    if '_to_' in filename:
-        start_date = filename.split('_to_')[0]
-    else:
-        start_date = filename
-    return pd.to_datetime(start_date)
-
-def load_and_combine_data(data_path):
-    """Load all Excel files from directory and combine them"""
-    # Get all Excel files and sort by start date
-    all_files = [f for f in os.listdir(data_path) if f.endswith('.xlsx')]
-    all_files.sort(key=parse_filename_date)
-    
-    dfs = []
-    for file in all_files:
-        df = pd.read_excel(os.path.join(data_path, file))
-        dfs.append(df)
-    
-    # Combine all files
-    combined_df = pd.concat(dfs, ignore_index=True)
-    
-    # Group by athlete and date to handle multiple entries
-    grouped_cols = {
-        # Columns to sum
-        'TRIMP (Index)': 'sum',
-        'Movement load': 'sum',
-        'Anaerobic threshold zone (hh:mm:ss)': 'sum',
-        'High intensity training (hh:mm:ss)': 'sum',
-        # Columns to take last value (daily summary metrics)
-        'Acute Training Load': 'last',
-        'Chronic Training Load': 'last',
-        'ACWR': 'last',
-        'Training Status': 'last'
-    }
-    
-    combined_df = combined_df.groupby(['Athlete name', 'Start date (dd.mm.yyyy)']).agg(grouped_cols).reset_index()
-    
-    return combined_df
 
 def clean_dataframe(df):
     """Clean and process raw FirstBeat data"""
