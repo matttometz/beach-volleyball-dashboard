@@ -27,18 +27,18 @@ def check_password():
     return True
 
 def color_recommendations(val):
-    """Style recommendations with black background and white text"""
+    """Style recommendations with muted colors"""
     colors = {
-        'more': 'background-color: #1e1e1e; color: white',  # Dark background for 'more'
-        'same': 'background-color: #2d2d2d; color: white',  # Slightly lighter dark for 'same'
-        'less': 'background-color: #3d3d3d; color: white'   # Even lighter dark for 'less'
+        'more': 'background-color: #90EE90',  # Muted green
+        'same': 'background-color: #D3D3D3',  # Light gray
+        'less': 'background-color: #FFB6B6'   # Muted red
     }
     return colors.get(val, '')
 
 def sort_athletes(df):
     """Sort athletes by Top Player status and then alphabetically"""
-    # Define Top Players
-    top_players = [
+    # Define Top Players with exact name matches from the data
+    top_players = {
         "Daniela Alvarez",
         "Stacy Reeves",
         "Hailey Hamlett",
@@ -53,18 +53,18 @@ def sort_athletes(df):
         "Anhelina Khmil",
         "Allanis Navas",
         "Sofia Izuzquiza"
-    ]
+    }
     
-    # Create a new column for sorting
-    df['sort_key'] = df['Athlete'].apply(lambda x: (0 if x in top_players else 1, x))
+    # Split into top players and others
+    top_player_df = df[df['Athlete'].isin(top_players)].copy()
+    other_players_df = df[~df['Athlete'].isin(top_players)].copy()
     
-    # Sort by the tuple (top_player_status, name)
-    df = df.sort_values('sort_key')
+    # Sort each group alphabetically
+    top_player_df = top_player_df.sort_values('Athlete')
+    other_players_df = other_players_df.sort_values('Athlete')
     
-    # Drop the sorting column
-    df = df.drop('sort_key', axis=1)
-    
-    return df
+    # Concatenate the sorted groups
+    return pd.concat([top_player_df, other_players_df]).reset_index(drop=True)
 
 st.set_page_config(page_title="Beach Volleyball Load Management", layout="wide")
 
@@ -130,25 +130,18 @@ try:
     
     recommendations = pd.DataFrame(results)
     
+    # Sort recommendations before display
+    recommendations = sort_athletes(recommendations)
+    
     # Display recommendations
     col1, col2 = st.columns(2)
     
     with col1:
         st.subheader("Current Recommendations")
-        
-        # Sort the recommendations
-        recommendations = sort_athletes(recommendations)
-        
-        # Apply styling
         styled_recommendations = recommendations.style.applymap(
             color_recommendations, 
             subset=['Recommendation']
-        ).set_properties(**{
-            'background-color': '#1e1e1e',
-            'color': 'white',
-            'border': '1px solid #2d2d2d'
-        })
-        
+        )
         st.dataframe(styled_recommendations)
     
     with col2:
@@ -157,15 +150,41 @@ try:
                        x='ACWR', 
                        y='Athlete',
                        color='Recommendation',
-                       title='ACWR by Athlete')
+                       title='ACWR by Athlete',
+                       height=800)  # Increased height to show all names
+        
+        fig.update_traces(marker=dict(size=12))  # Larger markers
+        
+        # Update color scheme to match table
+        fig.update_traces(
+            selector=dict(name="more"),
+            marker=dict(color="#90EE90")
+        )
+        fig.update_traces(
+            selector=dict(name="same"),
+            marker=dict(color="#D3D3D3")
+        )
+        fig.update_traces(
+            selector=dict(name="less"),
+            marker=dict(color="#FFB6B6")
+        )
+        
         fig.add_vline(x=1.0, line_dash="dash", line_color="green")
         fig.add_vline(x=1.3, line_dash="dash", line_color="red")
+        
+        # Ensure y-axis shows all labels
         fig.update_layout(
-            plot_bgcolor='#1e1e1e',
-            paper_bgcolor='#1e1e1e',
-            font_color='white'
+            yaxis=dict(
+                tickmode='array',
+                ticktext=recommendations['Athlete'].tolist(),
+                tickvals=list(range(len(recommendations))),
+                showgrid=True
+            ),
+            showlegend=True,
+            height=800
         )
-        st.plotly_chart(fig)
+        
+        st.plotly_chart(fig, use_container_width=True)
     
     # Individual athlete analysis
     st.subheader("Individual Athlete Analysis")
