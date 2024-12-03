@@ -29,9 +29,9 @@ def check_password():
 def color_recommendations(val):
     """Style recommendations with muted colors"""
     colors = {
-        'more': 'background-color: #90EE90',  # Muted green
-        'same': 'background-color: #D3D3D3',  # Light gray
-        'less': 'background-color: #FFB6B6'   # Muted red
+        'More': 'background-color: #009a00',  # Muted green
+        'Same': 'background-color: #909090',  # Light gray
+        'Less': 'background-color: #b00000'   # Muted red
     }
     return colors.get(val, '')
 
