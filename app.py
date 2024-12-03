@@ -1,27 +1,54 @@
 import streamlit as st
 import pandas as pd
 import plotly.express as px
-from process_data import clean_dataframe, calculate_training_recommendation
+from process_data import clean_dataframe, calculate_training_recommendation, load_and_combine_data
 import os
 
+# Password protection
+def check_password():
+    """Returns `True` if the user had the correct password."""
+
+    def password_entered():
+        """Checks whether a password entered by the user is correct."""
+        if st.session_state["password"] == st.secrets["password"]:
+            st.session_state["password_correct"] = True
+            del st.session_state["password"]  # Don't store the password.
+        else:
+            st.session_state["password_correct"] = False
+
+    # First run or password incorrect
+    if "password_correct" not in st.session_state:
+        st.text_input(
+            "Password", type="password", on_change=password_entered, key="password"
+        )
+        return False
+    
+    # Password correct
+    elif not st.session_state["password_correct"]:
+        st.text_input(
+            "Password", type="password", on_change=password_entered, key="password"
+        )
+        st.error("😕 Password incorrect")
+        return False
+    
+    return True
+
 st.set_page_config(page_title="Beach Volleyball Load Management", layout="wide")
+
+# Add password check
+if not check_password():
+    st.stop()
 
 # Title and description
 st.title("Beach Volleyball Load Management Dashboard")
 
-# File uploader
-uploaded_files = st.file_uploader("Upload FirstBeat Excel files", type=['xlsx'], accept_multiple_files=True)
+# Data directory path
+DATA_DIR = "data"  # You can change this to your preferred directory path
 
-if uploaded_files:
-    # Process all uploaded files
-    dfs = []
-    for file in uploaded_files:
-        df = pd.read_excel(file)
-        df_clean = clean_dataframe(df)
-        dfs.append(df_clean)
-    
-    # Combine all data
-    combined_df = pd.concat(dfs, ignore_index=True)
+try:
+    # Load and process data from directory
+    combined_df = load_and_combine_data(DATA_DIR)
+    combined_df = clean_dataframe(combined_df)
     
     # Calculate recommendations
     results = []
@@ -98,5 +125,6 @@ if uploaded_files:
             st.metric("Movement Load", 
                      f"{athlete_data['Movement load'].iloc[-1]:.1f}")
 
-else:
-    st.info("Please upload FirstBeat Excel files to view the dashboard")
+except Exception as e:
+    st.error(f"Error loading data: {str(e)}")
+    st.info("Please ensure the data directory exists and contains valid FirstBeat Excel files.")
