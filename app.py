@@ -49,7 +49,7 @@ def sort_athletes(df):
         "Deni Konstantinova",
         "Tania Moreno",
         "Anete Namike",
-        "Olivia Cliens",
+        "Olivia Clines",
         "Anhelina Khmil",
         "Allanis Navas",
         "Sofia Izuzquiza"
@@ -71,7 +71,7 @@ st.set_page_config(page_title="Beach Volleyball Load Management", layout="wide")
 if not check_password():
     st.stop()
 
-st.title("Beach Volleyball Load Management Dashboard")
+st.title("TCU Beach Volleyball Load Management Dashboard")
 
 try:
     # Read data from the data directory
@@ -137,7 +137,7 @@ try:
     col1, col2 = st.columns(2)
     
     with col1:
-        st.subheader("Current Recommendations")
+        st.subheader("Current Recommendations (Top 14)")
         styled_recommendations = recommendations.style.applymap(
             color_recommendations, 
             subset=['Recommendation']
@@ -157,15 +157,15 @@ try:
         
         # Update color scheme to match table
         fig.update_traces(
-            selector=dict(name="more"),
+            selector=dict(name="More"),
             marker=dict(color="#90EE90")
         )
         fig.update_traces(
-            selector=dict(name="same"),
+            selector=dict(name="Same"),
             marker=dict(color="#D3D3D3")
         )
         fig.update_traces(
-            selector=dict(name="less"),
+            selector=dict(name="Less"),
             marker=dict(color="#FFB6B6")
         )
         
