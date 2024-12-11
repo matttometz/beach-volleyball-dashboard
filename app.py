@@ -103,15 +103,18 @@ try:
         
         rec, details = calculate_training_recommendation(athlete_data, recent_data)
         
+        # Format the date to only show YYYY-MM-DD
+        formatted_date = recent_data['Start date (dd.mm.yyyy)'].strftime('%Y-%m-%d')
+        
         results.append({
             'Athlete': athlete,
             'Recommendation': rec,
-            'ACWR': round(details['acwr'], 2),
-            'Acute_Load_Ratio': round(details['acute_ratio'], 2),
-            'HR_Min_Ratio': round(details['hr_ratio'], 2),
-            'Movement_Ratio': round(details['movement_ratio'], 2),
-            'Last Training': recent_data['Start date (dd.mm.yyyy)'],
-            'Adjustment_Score': round(details['adjustment_score'], 2)
+            'ACWR': f"{details['acwr']:.2f}".rstrip('0').rstrip('.'),
+            'Acute_Load_Ratio': f"{details['acute_ratio']:.2f}".rstrip('0').rstrip('.'),
+            'HR_Min_Ratio': f"{details['hr_ratio']:.2f}".rstrip('0').rstrip('.'),
+            'Movement_Ratio': f"{details['movement_ratio']:.2f}".rstrip('0').rstrip('.'),
+            'Last Training': formatted_date,
+            'Adjustment_Score': f"{details['adjustment_score']:.2f}".rstrip('0').rstrip('.')
         })
     
     recommendations = pd.DataFrame(results)
