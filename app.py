@@ -133,9 +133,10 @@ try:
     # Get the latest training date
     latest_date = recommendations['Last Training'].max()
     
-    # Create the data structure with just the title and data (no column headers)
+    # Create the data structure with title, headers, and data
     data = [
-        [f'Training Recommendations based on data from {latest_date}', '', '']
+        [f'Training Recommendations based on data from {latest_date}', '', ''],
+        ['More Training', 'Maintain', 'Less Training']  # Keep these headers in the data
     ]
     
     # Create the data rows
@@ -153,19 +154,19 @@ try:
     for i in range(max_length):
         data.append([more_athletes[i], same_athletes[i], less_athletes[i]])
     
-    # Create DataFrame with all content
-    columns = ['More Training', 'Maintain', 'Less Training']
+    # Create DataFrame with hidden column names
+    columns = ['', '', '']  # Empty column names
     categorized_df = pd.DataFrame(data, columns=columns)
     
     # Display the combined DataFrame
     st.dataframe(
         categorized_df,
+        hide_index=True,
         column_config={
-            'More Training': st.column_config.Column(width='medium'),
-            'Maintain': st.column_config.Column(width='medium'),
-            'Less Training': st.column_config.Column(width='medium')
-        },
-        hide_index=True
+            '': st.column_config.Column(width='medium'),
+            ' ': st.column_config.Column(width='medium'),
+            '  ': st.column_config.Column(width='medium')
+        }
     )
 
 except Exception as e:
