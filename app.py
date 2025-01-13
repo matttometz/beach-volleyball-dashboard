@@ -133,12 +133,6 @@ try:
     # Get the latest training date
     latest_date = recommendations['Last Training'].max()
     
-    # Create the data structure with title, headers, and data
-    data = [
-        [f'Training Recommendations based on data from {latest_date}', '', ''],
-        ['More Training', 'Maintain', 'Less Training']  # Keep these headers in the data
-    ]
-    
     # Create the data rows
     more_athletes = recommendations[recommendations['Recommendation'] == 'More']['Athlete'].tolist()
     same_athletes = recommendations[recommendations['Recommendation'] == 'Same']['Athlete'].tolist()
@@ -146,27 +140,29 @@ try:
     
     max_length = max(len(more_athletes), len(same_athletes), len(less_athletes))
     
-    more_athletes.extend([''] * (max_length - len(more_athletes)))
-    same_athletes.extend([''] * (max_length - len(same_athletes)))
-    less_athletes.extend([''] * (max_length - len(less_athletes)))
+    # Create the data structure with title, headers, and data
+    data = []
     
-    # Add athlete rows to data
+    # Add title row
+    data.append([f'Training Recommendations based on data from {latest_date}', '', ''])
+    
+    # Add header row
+    data.append(['More Training', 'Maintain', 'Less Training'])
+    
+    # Add athlete rows, preserving order
     for i in range(max_length):
-        data.append([more_athletes[i], same_athletes[i], less_athletes[i]])
+        more_name = more_athletes[i] if i < len(more_athletes) else ''
+        same_name = same_athletes[i] if i < len(same_athletes) else ''
+        less_name = less_athletes[i] if i < len(less_athletes) else ''
+        data.append([more_name, same_name, less_name])
     
-    # Create DataFrame with unique but hidden column names
-    columns = ['col1', 'col2', 'col3']  # Unique column names
-    categorized_df = pd.DataFrame(data, columns=columns)
+    # Create DataFrame with proper headers for export
+    categorized_df = pd.DataFrame(data, columns=['More Training', 'Maintain', 'Less Training'])
     
     # Display the combined DataFrame
     st.dataframe(
         categorized_df,
-        hide_index=True,
-        column_config={
-            'col1': st.column_config.Column(width='medium', label=''),
-            'col2': st.column_config.Column(width='medium', label=''),
-            'col3': st.column_config.Column(width='medium', label='')
-        }
+        hide_index=True
     )
     
 except Exception as e:
