@@ -128,12 +128,13 @@ try:
     # Get the latest training date
     latest_date = recommendations['Last Training'].max()
     
-    # Create the title row
-    title_row = pd.DataFrame({
-        'More Training': [f'Training Recommendations based on data from {latest_date}'],
-        'Maintain': [''],
-        'Less Training': ['']
-    })
+    st.subheader("Printable Training Recommendations")
+    
+    # Create the title rows
+    data = [
+        [f'Training Recommendations based on data from {latest_date}', '', ''],
+        ['More Training', 'Maintain', 'Less Training']
+    ]
     
     # Create the data rows
     more_athletes = recommendations[recommendations['Recommendation'] == 'More']['Athlete'].tolist()
@@ -146,33 +147,23 @@ try:
     same_athletes.extend([''] * (max_length - len(same_athletes)))
     less_athletes.extend([''] * (max_length - len(less_athletes)))
     
-    # Create the data DataFrame
-    data_df = pd.DataFrame({
-        'More Training': more_athletes,
-        'Maintain': same_athletes,
-        'Less Training': less_athletes
-    })
+    # Add athlete rows to data
+    for i in range(max_length):
+        data.append([more_athletes[i], same_athletes[i], less_athletes[i]])
     
-    # Combine title and data
-    categorized_df = pd.concat([title_row, data_df], ignore_index=True)
+    # Create DataFrame with all content
+    columns = ['More Training', 'Maintain', 'Less Training']
+    categorized_df = pd.DataFrame(data, columns=columns)
     
     # Display the combined DataFrame
     st.dataframe(
         categorized_df,
         column_config={
-            'More Training': st.column_config.Column(
-                width='medium',
-                help='Athletes who should increase training intensity'
-            ),
-            'Maintain': st.column_config.Column(
-                width='medium',
-                help='Athletes who should maintain current training level'
-            ),
-            'Less Training': st.column_config.Column(
-                width='medium',
-                help='Athletes who should reduce training intensity'
-            )
-        }
+            'More Training': st.column_config.Column(width='medium'),
+            'Maintain': st.column_config.Column(width='medium'),
+            'Less Training': st.column_config.Column(width='medium')
+        },
+        hide_index=True
     )
 
 except Exception as e:
