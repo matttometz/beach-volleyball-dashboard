@@ -60,7 +60,7 @@ if not check_password():
 st.title("TCU Beach Volleyball Load Management Dashboard")
 
 try:
-    # Read data from the data directory
+    # Read and process data (keeping existing data processing logic)
     data_path = "data"
     data_files = [f for f in os.listdir(data_path) if f.endswith('.xlsx')]
     
@@ -68,16 +68,14 @@ try:
         st.error("No Excel files found in the data directory")
         st.stop()
     
-    # Process all files
     dfs = []
     for file in data_files:
         df = pd.read_excel(os.path.join(data_path, file))
         dfs.append(df)
     
-    # Combine all data
     combined_df = pd.concat(dfs, ignore_index=True)
     
-    # Group by athlete and date
+    # Group by athlete and date (keeping existing grouping logic)
     grouped_cols = {
         'TRIMP (Index)': 'sum',
         'Movement load': 'sum',
@@ -90,11 +88,9 @@ try:
     }
     
     combined_df = combined_df.groupby(['Athlete name', 'Start date (dd.mm.yyyy)']).agg(grouped_cols).reset_index()
-    
-    # Clean the combined data
     combined_df = clean_dataframe(combined_df)
     
-    # Calculate recommendations
+    # Calculate recommendations but only keep necessary columns
     results = []
     for athlete in combined_df['Athlete name'].unique():
         athlete_data = combined_df[combined_df['Athlete name'] == athlete]
@@ -102,33 +98,34 @@ try:
                                athlete_data['Start date (dd.mm.yyyy)'].max()].iloc[0]
         
         rec, details = calculate_training_recommendation(athlete_data, recent_data)
-        
-        # Format the date to only show YYYY-MM-DD
         formatted_date = recent_data['Start date (dd.mm.yyyy)'].strftime('%Y-%m-%d')
         
+        # Only include necessary columns
         results.append({
             'Athlete': athlete,
             'Recommendation': rec,
-            'ACWR': f"{details['acwr']:.2f}".rstrip('0').rstrip('.'),
-            'Acute_Load_Ratio': f"{details['acute_ratio']:.2f}".rstrip('0').rstrip('.'),
-            'HR_Min_Ratio': f"{details['hr_ratio']:.2f}".rstrip('0').rstrip('.'),
-            'Movement_Ratio': f"{details['movement_ratio']:.2f}".rstrip('0').rstrip('.'),
-            'Last Training': formatted_date,
-            'Adjustment_Score': f"{details['adjustment_score']:.2f}".rstrip('0').rstrip('.')
+            'Last Training': formatted_date
         })
     
     recommendations = pd.DataFrame(results)
     recommendations = sort_athletes(recommendations)
     
-    # Display detailed recommendations table
+    # Display simplified recommendations table
     st.subheader("Current Recommendations (Top 14)")
     styled_recommendations = recommendations.style.applymap(
         color_recommendations, 
         subset=['Recommendation']
     )
-    st.dataframe(styled_recommendations)
+    st.dataframe(
+        styled_recommendations,
+        column_config={
+            'Athlete': st.column_config.Column(width='medium'),
+            'Recommendation': st.column_config.Column(width='medium'),
+            'Last Training': st.column_config.Column(width='medium')
+        }
+    )
     
-    # Create and display categorized table
+    # Keep existing categorized table
     st.subheader("Athletes by Training Recommendation")
     
     col1, col2, col3 = st.columns(3)
@@ -137,22 +134,18 @@ try:
     same_athletes = recommendations[recommendations['Recommendation'] == 'Same']['Athlete'].tolist()
     less_athletes = recommendations[recommendations['Recommendation'] == 'Less']['Athlete'].tolist()
     
-    # Find the maximum length
     max_length = max(len(more_athletes), len(same_athletes), len(less_athletes))
     
-    # Pad the shorter lists with empty strings
     more_athletes.extend([''] * (max_length - len(more_athletes)))
     same_athletes.extend([''] * (max_length - len(same_athletes)))
     less_athletes.extend([''] * (max_length - len(less_athletes)))
     
-    # Create the categorized DataFrame
     categorized_df = pd.DataFrame({
         'More Training': more_athletes,
         'Maintain Level': same_athletes,
         'Reduce Training': less_athletes
     })
     
-    # Style the categorized table
     st.dataframe(
         categorized_df,
         column_config={
