@@ -153,11 +153,11 @@ try:
                 width='medium',
                 help='Athletes who should increase training intensity'
             ),
-            'Maintain Level': st.column_config.Column(
+            'Maintain': st.column_config.Column(
                 width='medium',
                 help='Athletes who should maintain current training level'
             ),
-            'Reduce Training': st.column_config.Column(
+            'Less Training': st.column_config.Column(
                 width='medium',
                 help='Athletes who should reduce training intensity'
             )
