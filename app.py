@@ -154,8 +154,8 @@ try:
     for i in range(max_length):
         data.append([more_athletes[i], same_athletes[i], less_athletes[i]])
     
-    # Create DataFrame with hidden column names
-    columns = ['', '', '']  # Empty column names
+    # Create DataFrame with unique but hidden column names
+    columns = ['col1', 'col2', 'col3']  # Unique column names
     categorized_df = pd.DataFrame(data, columns=columns)
     
     # Display the combined DataFrame
@@ -163,12 +163,12 @@ try:
         categorized_df,
         hide_index=True,
         column_config={
-            '': st.column_config.Column(width='medium'),
-            ' ': st.column_config.Column(width='medium'),
-            '  ': st.column_config.Column(width='medium')
+            'col1': st.column_config.Column(width='medium', label=''),
+            'col2': st.column_config.Column(width='medium', label=''),
+            'col3': st.column_config.Column(width='medium', label='')
         }
     )
-
+    
 except Exception as e:
     st.error(f"Error processing data: {str(e)}")
     st.write("Please ensure that the data directory exists and contains valid FirstBeat Excel files")
