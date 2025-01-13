@@ -60,7 +60,7 @@ if not check_password():
 st.title("TCU Beach Volleyball Load Management Dashboard")
 
 try:
-    # Read and process data (keeping existing data processing logic)
+    # Read and process data
     data_path = "data"
     data_files = [f for f in os.listdir(data_path) if f.endswith('.xlsx')]
     
@@ -75,7 +75,7 @@ try:
     
     combined_df = pd.concat(dfs, ignore_index=True)
     
-    # Group by athlete and date (keeping existing grouping logic)
+    # Group by athlete and date
     grouped_cols = {
         'TRIMP (Index)': 'sum',
         'Movement load': 'sum',
@@ -90,7 +90,7 @@ try:
     combined_df = combined_df.groupby(['Athlete name', 'Start date (dd.mm.yyyy)']).agg(grouped_cols).reset_index()
     combined_df = clean_dataframe(combined_df)
     
-    # Calculate recommendations but only keep necessary columns
+    # Calculate recommendations
     results = []
     for athlete in combined_df['Athlete name'].unique():
         athlete_data = combined_df[combined_df['Athlete name'] == athlete]
@@ -125,11 +125,17 @@ try:
         }
     )
     
-    # Keep existing categorized table
-    st.subheader("Athletes by Training Recommendation")
+    # Get the latest training date
+    latest_date = recommendations['Last Training'].max()
     
-    col1, col2, col3 = st.columns(3)
+    # Create the title row
+    title_row = pd.DataFrame({
+        'More Training': [f'Training Recommendations based on data from {latest_date}'],
+        'Maintain': [''],
+        'Less Training': ['']
+    })
     
+    # Create the data rows
     more_athletes = recommendations[recommendations['Recommendation'] == 'More']['Athlete'].tolist()
     same_athletes = recommendations[recommendations['Recommendation'] == 'Same']['Athlete'].tolist()
     less_athletes = recommendations[recommendations['Recommendation'] == 'Less']['Athlete'].tolist()
@@ -140,12 +146,17 @@ try:
     same_athletes.extend([''] * (max_length - len(same_athletes)))
     less_athletes.extend([''] * (max_length - len(less_athletes)))
     
-    categorized_df = pd.DataFrame({
+    # Create the data DataFrame
+    data_df = pd.DataFrame({
         'More Training': more_athletes,
-        'Maintain Level': same_athletes,
-        'Reduce Training': less_athletes
+        'Maintain': same_athletes,
+        'Less Training': less_athletes
     })
     
+    # Combine title and data
+    categorized_df = pd.concat([title_row, data_df], ignore_index=True)
+    
+    # Display the combined DataFrame
     st.dataframe(
         categorized_df,
         column_config={
