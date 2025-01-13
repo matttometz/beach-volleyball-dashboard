@@ -127,13 +127,15 @@ try:
     
     # Get the latest training date
     latest_date = recommendations['Last Training'].max()
-    
+
     st.subheader("Printable Training Recommendations")
     
-    # Create the title rows
+    # Get the latest training date
+    latest_date = recommendations['Last Training'].max()
+    
+    # Create the data structure with just the title and data (no column headers)
     data = [
-        [f'Training Recommendations based on data from {latest_date}', '', ''],
-        ['More Training', 'Maintain', 'Less Training']
+        [f'Training Recommendations based on data from {latest_date}', '', '']
     ]
     
     # Create the data rows
