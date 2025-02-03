@@ -173,28 +173,37 @@ if not wellness_files:
     st.error("No wellness data files found")
 else:
     try:
+        # Debug: Print what file we're trying to read
+        st.write(f"Found wellness file: {wellness_files[0]}")
+        
         wellness_df = pd.read_excel(os.path.join(wellness_path, wellness_files[0]))
+        
+        # Debug: Print the raw dataframe
+        st.write("Raw DataFrame:")
+        st.write(wellness_df)
+        
+        # Debug: Print columns
+        st.write("Columns:", wellness_df.columns.tolist())
         
         # Process the wellness data
         display_data, stats, wellness_metrics = process_wellness_data(wellness_df)
         
+        # Debug: Print processed data
+        st.write("Processed data:")
+        st.write(display_data)
+        
         # Create the display DataFrame
         wellness_display = create_wellness_display(display_data, stats, wellness_metrics)
         
-        # Apply styling
-        styled_wellness = wellness_display.style.apply(
-            style_wellness_display(wellness_display, stats),
-            axis=None
-        )
+        # Debug: Print final display
+        st.write("Final display:")
+        st.write(wellness_display)
         
-        # Display the styled DataFrame
         st.dataframe(wellness_display)
         
     except Exception as e:
         st.error(f"Error processing wellness data: {str(e)}")
+        # Print full error traceback
         import traceback
+        st.write("Full error:")
         st.write(traceback.format_exc())
-
-except Exception as e:
-    st.error(f"Error processing data: {str(e)}")
-    st.write("Please ensure that the data directory exists and contains valid FirstBeat Excel files")
