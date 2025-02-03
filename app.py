@@ -166,46 +166,60 @@ try:
     # Add Wellness Data Section
     st.subheader("Weekly Wellness Overview")
     
-    # Read wellness data
-    wellness_path = "wellness_data"
-    wellness_files = [f for f in os.listdir(wellness_path) if f.endswith('.xlsx')]
-    
-    if not wellness_files:
-        st.error("No wellness data files found")
-    else:
-        try:
+    try:
+        # Read wellness data
+        wellness_path = "wellness_data"
+        wellness_files = [f for f in os.listdir(wellness_path) if f.endswith('.xlsx')]
+        
+        if not wellness_files:
+            st.error("No wellness data files found")
+        else:
             # Read the wellness file
             wellness_file = os.path.join(wellness_path, wellness_files[0])
+            st.write(f"Reading file: {wellness_files[0]}")  # Debug line
             wellness_df = pd.read_excel(wellness_file)
+            
+            # Verify columns
+            st.write("Columns found:", wellness_df.columns.tolist())  # Debug line
             
             # Process wellness data
             display_data, stats, wellness_metrics = process_wellness_data(wellness_df)
             
-            # Create wellness display
+            # Create wellness display without styling first
             wellness_display = create_wellness_display(display_data, stats, wellness_metrics)
             
-            # Apply styling directly without any formatting
-            styled_wellness = wellness_display.style.apply(
-                lambda _: style_wellness_display(wellness_display, stats), 
-                axis=None
-            )
+            # Basic display first to verify data
+            styled = wellness_display.style
+            styled.set_properties(**{'text-align': 'center'})
             
-            # Basic display using st.dataframe
-            st.dataframe(styled_wellness)
+            try:
+                # Apply the styling function
+                styled = styled.apply(lambda _: style_wellness_display(wellness_display, stats), axis=None)
+                
+                # Display with streamlit
+                st.dataframe(
+                    styled,
+                    use_container_width=True,
+                )
+                
+                # Add legend
+                st.markdown("""
+                **Legend:**
+                - 🔴 More than 1 SD below 2-week average
+                - ⚫ Within 1 SD of 2-week average
+                - 🟢 More than 1 SD above 2-week average
+                - Blank cells indicate no data submitted
+                """)
+                
+            except Exception as style_error:
+                st.error(f"Styling error: {str(style_error)}")
+                # Fall back to unstyled display
+                st.dataframe(wellness_display)
             
-            # Add legend
-            st.markdown("""
-            **Legend:**
-            - 🔴 More than 1 SD below 2-week average
-            - ⚫ Within 1 SD of 2-week average
-            - 🟢 More than 1 SD above 2-week average
-            - Blank cells indicate no data submitted
-            """)
-            
-        except Exception as e:
-            st.error(f"Error processing wellness data: {str(e)}")
-            st.write("Full error details:", e.__class__.__name__)
-            st.write("Error location:", e.__traceback__.tb_lineno)
+    except Exception as e:
+        st.error(f"Error in wellness section: {str(e)}")
+        st.write("Type:", type(e))
+        st.write("Please ensure the wellness data file is properly formatted and located in the wellness_data directory")
 
 except Exception as e:
     st.error(f"Error processing data: {str(e)}")
