@@ -192,10 +192,10 @@ try:
                 styled_wellness,
                 column_config={
                     col: st.column_config.Column(
-                        width='medium',
-                        format=lambda x: f"{x:.1f}" if pd.notnull(x) else ""
+                        width='medium'
                     ) for col in wellness_display.columns
-                }
+                },
+                hide_index=False  # Show the multi-index to display athlete names and metrics
             )
             
             # Add legend
