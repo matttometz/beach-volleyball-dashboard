@@ -175,33 +175,23 @@ else:
     try:
         wellness_df = pd.read_excel(os.path.join(wellness_path, wellness_files[0]))
         
-        # Debug: Show raw data
-        st.write("Raw wellness data:")
-        st.write(wellness_df.head())
-        st.write("Columns:", wellness_df.columns.tolist())
-        
         # Process the wellness data
         display_data, stats, wellness_metrics = process_wellness_data(wellness_df)
-        
-        # Debug: Show processed data
-        st.write("Processed display data:")
-        st.write(display_data.head())
-        st.write("Stats:", stats)
-        st.write("Metrics:", wellness_metrics)
         
         # Create the display DataFrame
         wellness_display = create_wellness_display(display_data, stats, wellness_metrics)
         
-        # Debug: Show display DataFrame before styling
-        st.write("Display DataFrame before styling:")
-        st.write(wellness_display)
+        # Apply styling
+        styled_wellness = wellness_display.style.apply(
+            style_wellness_display(wellness_display, stats),
+            axis=None
+        )
         
-        # Try displaying without styling first
+        # Display the styled DataFrame
         st.dataframe(wellness_display)
         
     except Exception as e:
         st.error(f"Error processing wellness data: {str(e)}")
-        # Print the full error traceback
         import traceback
         st.write(traceback.format_exc())
 
