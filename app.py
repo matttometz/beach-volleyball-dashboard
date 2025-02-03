@@ -166,7 +166,7 @@ try:
     # Add Wellness Data Section
     st.subheader("Weekly Wellness Overview")
     
-    try:
+try:
         # Read wellness data
         wellness_path = "wellness_data"
         wellness_files = [f for f in os.listdir(wellness_path) if f.endswith('.xlsx')]
@@ -182,16 +182,13 @@ try:
             
             # Create and style the wellness display
             wellness_display = create_wellness_display(display_data, stats, wellness_metrics)
-            styled_wellness = wellness_display.style.apply(
-                lambda _: style_wellness_display(wellness_display, stats),
-                axis=None
-            )
+            
+            # Create the style
+            def style_dataframe(df):
+                return df.style.apply(lambda _: style_wellness_display(df, stats), axis=None)
             
             # Display the styled DataFrame
-            st.dataframe(
-                styled_wellness,
-                hide_index=False
-            )
+            st.write(style_dataframe(wellness_display))
             
             # Add legend
             st.markdown("""
