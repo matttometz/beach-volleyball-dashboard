@@ -163,23 +163,18 @@ try:
         hide_index=True
     )
     
-st.subheader("Weekly Wellness Overview")
+    # Wellness section
+    st.subheader("Weekly Wellness Overview")
+    wellness_path = "wellness_data"
+    wellness_files = [f for f in os.listdir(wellness_path) if f.endswith('.xlsx')]
 
-# Read wellness data
-wellness_path = "wellness_data"
-wellness_files = [f for f in os.listdir(wellness_path) if f.endswith('.xlsx')]
-
-if not wellness_files:
-    st.error("No wellness data files found")
-else:
-    try:
-        # Just read and display the raw data first
+    if not wellness_files:
+        st.error("No wellness data files found")
+    else:
         wellness_df = pd.read_excel(os.path.join(wellness_path, wellness_files[0]))
+        st.write("Raw wellness data:")
         st.dataframe(wellness_df)
-        
-    except Exception as e:
-        st.error(f"Error reading wellness data: {str(e)}")
-        
+
 except Exception as e:
     st.error(f"Error processing data: {str(e)}")
     st.write("Please ensure that the data directory exists and contains valid FirstBeat Excel files")
