@@ -184,13 +184,14 @@ try:
             # Create wellness display
             wellness_display = create_wellness_display(display_data, stats, wellness_metrics)
             
-            # Apply styling directly
-            def style_df(df):
-                styles = style_wellness_display(df, stats)
-                return df.style.apply(lambda _: styles, axis=None).format("{:.1f}")
+            # Apply styling directly without any formatting
+            styled_wellness = wellness_display.style.apply(
+                lambda _: style_wellness_display(wellness_display, stats), 
+                axis=None
+            )
             
-            # Display the data
-            st.dataframe(style_df(wellness_display))
+            # Basic display using st.dataframe
+            st.dataframe(styled_wellness)
             
             # Add legend
             st.markdown("""
@@ -202,9 +203,9 @@ try:
             """)
             
         except Exception as e:
-            import traceback
             st.error(f"Error processing wellness data: {str(e)}")
-            st.write(f"Detailed error: {traceback.format_exc()}")
+            st.write("Full error details:", e.__class__.__name__)
+            st.write("Error location:", e.__traceback__.tb_lineno)
 
 except Exception as e:
     st.error(f"Error processing data: {str(e)}")
