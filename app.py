@@ -190,12 +190,7 @@ try:
             # Display the styled DataFrame
             st.dataframe(
                 styled_wellness,
-                column_config={
-                    col: st.column_config.Column(
-                        width='medium'
-                    ) for col in wellness_display.columns
-                },
-                hide_index=False  # Show the multi-index to display athlete names and metrics
+                hide_index=False
             )
             
             # Add legend
