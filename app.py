@@ -166,7 +166,7 @@ try:
     # Add Wellness Data Section
     st.subheader("Weekly Wellness Overview")
     
-try:
+    try:
         # Read wellness data
         wellness_path = "wellness_data"
         wellness_files = [f for f in os.listdir(wellness_path) if f.endswith('.xlsx')]
