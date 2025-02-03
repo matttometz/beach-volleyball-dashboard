@@ -166,29 +166,31 @@ try:
     # Add Wellness Data Section
     st.subheader("Weekly Wellness Overview")
     
-    try:
-        # Read wellness data
-        wellness_path = "wellness_data"
-        wellness_files = [f for f in os.listdir(wellness_path) if f.endswith('.xlsx')]
-        
-        if not wellness_files:
-            st.error("No wellness data files found")
-        else:
+    # Read wellness data
+    wellness_path = "wellness_data"
+    wellness_files = [f for f in os.listdir(wellness_path) if f.endswith('.xlsx')]
+    
+    if not wellness_files:
+        st.error("No wellness data files found")
+    else:
+        try:
             # Read the wellness file
-            wellness_df = pd.read_excel(os.path.join(wellness_path, wellness_files[0]))
+            wellness_file = os.path.join(wellness_path, wellness_files[0])
+            wellness_df = pd.read_excel(wellness_file)
             
             # Process wellness data
             display_data, stats, wellness_metrics = process_wellness_data(wellness_df)
             
-            # Create and style the wellness display
+            # Create wellness display
             wellness_display = create_wellness_display(display_data, stats, wellness_metrics)
             
-            # Create the style
-            def style_dataframe(df):
-                return df.style.apply(lambda _: style_wellness_display(df, stats), axis=None)
+            # Apply styling directly
+            def style_df(df):
+                styles = style_wellness_display(df, stats)
+                return df.style.apply(lambda _: styles, axis=None).format("{:.1f}")
             
-            # Display the styled DataFrame
-            st.write(style_dataframe(wellness_display))
+            # Display the data
+            st.dataframe(style_df(wellness_display))
             
             # Add legend
             st.markdown("""
@@ -199,9 +201,10 @@ try:
             - Blank cells indicate no data submitted
             """)
             
-    except Exception as e:
-        st.error(f"Error processing wellness data: {str(e)}")
-        st.write("Please ensure the wellness data file is properly formatted and located in the wellness_data directory")
+        except Exception as e:
+            import traceback
+            st.error(f"Error processing wellness data: {str(e)}")
+            st.write(f"Detailed error: {traceback.format_exc()}")
 
 except Exception as e:
     st.error(f"Error processing data: {str(e)}")
