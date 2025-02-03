@@ -2,6 +2,7 @@ import streamlit as st
 import pandas as pd
 import plotly.express as px
 from process_data import clean_dataframe, calculate_training_recommendation
+from process_wellness import process_wellness_data, create_wellness_display, style_wellness_display
 import os
 
 # Password protection
@@ -60,7 +61,7 @@ if not check_password():
 st.title("TCU Beach Volleyball Load Management Dashboard")
 
 try:
-    # Read and process data
+    # Read and process FirstBeat data
     data_path = "data"
     data_files = [f for f in os.listdir(data_path) if f.endswith('.xlsx')]
     
@@ -127,11 +128,8 @@ try:
     
     # Get the latest training date
     latest_date = recommendations['Last Training'].max()
-
-    st.subheader("Printable Training Recommendations")
     
-    # Get the latest training date
-    latest_date = recommendations['Last Training'].max()
+    st.subheader("Printable Training Recommendations")
     
     # Create the data rows
     more_athletes = recommendations[recommendations['Recommendation'] == 'More']['Athlete'].tolist()
@@ -165,6 +163,54 @@ try:
         hide_index=True
     )
     
+    # Add Wellness Data Section
+    st.subheader("Weekly Wellness Overview")
+    
+    try:
+        # Read wellness data
+        wellness_path = "wellness_data"
+        wellness_files = [f for f in os.listdir(wellness_path) if f.endswith('.xlsx')]
+        
+        if not wellness_files:
+            st.error("No wellness data files found")
+        else:
+            # Read the wellness file
+            wellness_df = pd.read_excel(os.path.join(wellness_path, wellness_files[0]))
+            
+            # Process wellness data
+            display_data, stats, wellness_metrics = process_wellness_data(wellness_df)
+            
+            # Create and style the wellness display
+            wellness_display = create_wellness_display(display_data, stats, wellness_metrics)
+            styled_wellness = wellness_display.style.apply(
+                lambda _: style_wellness_display(wellness_display, stats),
+                axis=None
+            )
+            
+            # Display the styled DataFrame
+            st.dataframe(
+                styled_wellness,
+                column_config={
+                    col: st.column_config.Column(
+                        width='medium',
+                        format=lambda x: f"{x:.1f}" if pd.notnull(x) else ""
+                    ) for col in wellness_display.columns
+                }
+            )
+            
+            # Add legend
+            st.markdown("""
+            **Legend:**
+            - 🔴 More than 1 SD below 2-week average
+            - ⚫ Within 1 SD of 2-week average
+            - 🟢 More than 1 SD above 2-week average
+            - Blank cells indicate no data submitted
+            """)
+            
+    except Exception as e:
+        st.error(f"Error processing wellness data: {str(e)}")
+        st.write("Please ensure the wellness data file is properly formatted and located in the wellness_data directory")
+
 except Exception as e:
     st.error(f"Error processing data: {str(e)}")
     st.write("Please ensure that the data directory exists and contains valid FirstBeat Excel files")
