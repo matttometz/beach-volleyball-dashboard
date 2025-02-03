@@ -163,26 +163,38 @@ try:
         hide_index=True
     )
     
-    st.subheader("Weekly Wellness Overview")
-    
-    # Read wellness data
-    wellness_path = "wellness_data"
-    wellness_files = [f for f in os.listdir(wellness_path) if f.endswith('.xlsx')]
-    
-    if not wellness_files:
-        st.error("No wellness data files found")
-    else:
-        try:
-            # Debug section
-            st.write("Found wellness file:", wellness_files[0])
-            wellness_df = pd.read_excel(os.path.join(wellness_path, wellness_files[0]))
-            st.write("Raw data shape:", wellness_df.shape)
-            st.write("Columns:", wellness_df.columns.tolist())
-            st.write("First few rows of raw data:")
-            st.dataframe(wellness_df.head())
-            
-        except Exception as e:
-            st.error(f"Error reading wellness data: {str(e)}")
+st.subheader("Weekly Wellness Overview")
+
+# Read wellness data
+wellness_path = "wellness_data"
+wellness_files = [f for f in os.listdir(wellness_path) if f.endswith('.xlsx')]
+
+if not wellness_files:
+    st.error("No wellness data files found")
+else:
+    try:
+        wellness_df = pd.read_excel(os.path.join(wellness_path, wellness_files[0]))
+        
+        # Process the wellness data
+        display_data, stats, wellness_metrics = process_wellness_data(wellness_df)
+        
+        # Create the display DataFrame
+        wellness_display = create_wellness_display(display_data, stats, wellness_metrics)
+        
+        # Apply styling
+        styled_wellness = wellness_display.style.apply(
+            lambda x: style_wellness_display(wellness_display, stats),
+            axis=None
+        )
+        
+        # Display the styled DataFrame
+        st.dataframe(
+            styled_wellness,
+            use_container_width=True
+        )
+        
+    except Exception as e:
+        st.error(f"Error processing wellness data: {str(e)}")
 
 except Exception as e:
     st.error(f"Error processing data: {str(e)}")
