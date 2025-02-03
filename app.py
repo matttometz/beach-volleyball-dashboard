@@ -5,8 +5,6 @@ from process_data import clean_dataframe, calculate_training_recommendation
 from process_wellness import process_wellness_data, create_wellness_display, style_wellness_display
 import os
 
-st.write(f"Streamlit version: {st.__version__}")
-
 # Password protection
 def check_password():
     """Returns `True` if the user had the correct password."""
