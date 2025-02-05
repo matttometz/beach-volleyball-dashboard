@@ -112,7 +112,7 @@ try:
     recommendations = sort_athletes(recommendations)
     
     # Display simplified recommendations table
-    st.subheader("Current Recommendations (Top 14)")
+    st.subheader("Current Recommendations (Top 1)")
     styled_recommendations = recommendations.style.applymap(
         color_recommendations, 
         subset=['Recommendation']
