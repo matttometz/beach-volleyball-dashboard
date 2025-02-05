@@ -4,6 +4,10 @@ import plotly.express as px
 from process_data import clean_dataframe, calculate_training_recommendation
 import os
 
+# Add after imports
+import logging
+logging.basicConfig(level=logging.INFO)
+
 def check_password():
     def password_entered():
         if st.session_state["password"] == st.secrets["password"]:
@@ -51,6 +55,11 @@ st.title("TCU Beach Volleyball Load Management Dashboard")
 
 try:
     data_path = "data"
+
+    # Add inside try block after data_path = "data"
+    logging.info(f"Looking for files in {os.path.abspath(data_path)}")
+    logging.info(f"Found files: {data_files}")
+    
     data_files = [f for f in os.listdir(data_path) if f.endswith('.xlsx')]
     
     if not data_files:
